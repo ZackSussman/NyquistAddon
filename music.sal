@@ -1,0 +1,152 @@
+
+
+
+define variable *unit-pulse-duration* = 0.25 ;seconds 
+define variable *unit-pulse-symbol* = "†"
+
+define function set-unit-pulse(t)
+ begin
+    set *unit-pulse-duration* = t
+ end
+
+
+
+;label object interface
+;-----------------------------------------------------------------------
+
+define function make-containment-label(name, duration, containment)
+ begin
+    return list("containment-label", name, duration, containment)
+ end
+
+define function make-anonymous-subpulses-label(name, duration, n)
+ begin
+    return list("anonymous-subpulses-label", name, duration, n)
+ end
+
+define function make-unit-pulse-label()
+ begin
+   return list(*unit-pulse-symbol*)
+ end
+
+
+define function extract-name(label-object)
+ begin
+   if nth(0, label-object) = *unit-pulse-symbol* then return *unit-pulse-symbol*
+   return nth(1, label-object)
+ end
+
+define function extract-duration(label-object)
+ begin
+   if nth(0, label-object) = *unit-pulse-symbol* then return *unit-pulse-duration*
+   return nth(2, label-object)
+ end
+
+
+;return whether the label has sub-labels, sub-pulses, or is the unit label
+define function containment-type(label-object)
+ begin
+    return nth(0, label-object)
+ end
+
+
+define function extract-containment(label-object)
+ begin
+  return nth(3, label-object)
+ end
+
+define function extract-anonymous-subpulses(label-object)
+ begin
+   return nth(3, label-object)
+ end
+
+define function set-length(label-object, new-length)
+  begin
+     return list(nth(0, label-object), new-length, nth(2, label-object))
+  end
+
+
+;-----------------------------------------------------------------------
+
+
+;store the labels: the format is {label1 label2 label3 ... labeln}, where
+; labeli = {name duration(in seconds) containment } (unless labeli = *unit-pulse-symbol* in which case there is no containment or duration (since we just read from *unit-pulse-duration*))
+;where containment is a list containing the labels that this label contains, or a number if instead this label is broken down into that number of pulses.
+;In this case, the duration refers to the total time taken up by the sub-pulses and not each individual sub-pulse
+define variable *labels* = list(make-unit-pulse-label())
+
+;label collection interface
+;-----------------------------------------------------------------------
+;return a label-object
+define function find-label(name)
+ begin
+    loop 
+        for i from 0 below length(*labels*)
+		   set label-object = nth(i, *labels*)
+		   if extract-name(label-object) = name then return label-object
+	    end
+	 print("error: invalid label name in find-label") 
+ end
+
+;requires label is not already in *labels*
+ define function insert-label(label-object)
+  begin
+     set *labels* = cons(label-object, *labels*)
+  end
+;-----------------------------------------------------------------------
+
+
+
+
+;add a label to your musical world
+;name is the name of the label, it must be distinct from other labels you've made so far
+;containment is a list of the labels making up your label
+;each label in the list can be a label you made already or the unit pulse
+;the duration argument can be left blank for the length of this label to be inferred based on the containment
+;otherwise the containment must be set to a list {n id} where n is the number of subpulses 
+;with label id and they fit equally within this label of duration duration-label
+define function add-label(name, containment, duration-label: "infer")
+ begin
+    if duration-label = "infer" then
+	  begin
+         set duration = 0
+		 loop 
+		    for i from 0 below length(containment)
+			   set duration = duration + extract-duration(find-label(nth(i, containment)))
+			end
+		 exec insert-label(make-containment-label(name, duration, containment))
+		 return
+	  end
+	set duration = extract-duration(find-label(duration-label))
+	exec insert-label(make-anonymous-subpulses-label(name, duration, containment))
+ end
+
+;return the inter-onset intervals given by the flow of the label in a tree format
+define function label-to-iois(label)
+ begin
+    with label-object = find-label(label),
+	     type = containment-type(label-object),
+		 duration = extract-duration(label-object),
+		 res = nil
+    if type = *unit-pulse-symbol* then return *unit-pulse-duration*
+    else if type = "anonymous-subpulses-label" then 
+      begin
+         with n = extract-anonymous-subpulses(label-object)
+	    loop
+          for i from 0 below n
+             set res = cons(duration / (n * 1.0), res)
+		  end
+		return res
+	 end
+	else 
+ 	  begin
+        with containment = extract-containment(label-object)
+		loop
+          for i from 0 below length(containment)		
+             set res = cons(label-to-iois(nth(i, containment)), res)
+		  end
+		return reverse(res)
+	  end
+ end
+
+

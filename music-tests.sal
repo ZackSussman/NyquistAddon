@@ -1,0 +1,17 @@
+load "music.sal"
+
+exec add-label("dige", list(*unit-pulse-symbol*, *unit-pulse-symbol*))
+exec add-label("dom", 1, duration-label: "dige")
+exec add-label("digedom", list("dige", "dom"))
+
+exec add-label("dagudu", 3, duration-label: "digedom")
+
+exec add-label("dim", 1, duration-label: "dom")
+exec add-label("bim", 1, duration-label: "dom")
+exec add-label("dimbim", list("dim", "bim"))
+
+exec add-label("longerdom", 1, duration-label: "digedom")
+
+exec add-label("rhythm", list("digedom", "dagudu", "dimbim", "longerdom"))
+
+print(label-to-iois("rhythm"))
