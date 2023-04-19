@@ -1,0 +1,60 @@
+;label object interface
+;these functions shouldn't be used by the composer
+;-----------------------------------------------------------------------
+define function make-containment-label(name, duration, containment)
+ begin
+    return list("containment-label", name, duration, containment)
+ end
+
+define function make-anonymous-subpulses-label(name, duration, n)
+ begin
+    return list("anonymous-subpulses-label", name, duration, n)
+ end
+
+define function make-unit-pulse-label()
+ begin
+   return list(*unit-pulse-symbol*)
+ end
+
+define function make-unsafe-duration-label(name, duration)
+ begin
+   return list("UNSAFE", name, duration)
+ end
+
+
+define function extract-name(label-object)
+ begin
+   if nth(0, label-object) = *unit-pulse-symbol* then return *unit-pulse-symbol*
+   return nth(1, label-object)
+ end
+
+define function extract-duration(label-object)
+ begin
+   if nth(0, label-object) = *unit-pulse-symbol* then return *unit-pulse-duration*
+   return nth(2, label-object)
+ end
+
+
+;return whether the label has sub-labels, sub-pulses, or is the unit label
+define function containment-type(label-object)
+ begin
+    return nth(0, label-object)
+ end
+
+
+define function extract-containment(label-object)
+ begin
+  return nth(3, label-object)
+ end
+
+define function extract-anonymous-subpulses(label-object)
+ begin
+   return nth(3, label-object)
+ end
+
+define function set-length(label-object, new-length)
+  begin
+     return list(nth(0, label-object), new-length, nth(2, label-object))
+  end
+;-----------------------------------------------------------------------
+

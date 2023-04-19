@@ -1,0 +1,63 @@
+;defines a simple interface for a dictionary
+;simple list implementation
+;not the most efficient implementation but it is absurdly unlikely for composers
+;to want to use more than 100 layers in a composition and this could easily
+;be reimplemented later if that changes
+
+define variable **dict** = nil
+
+;for sanity
+define variable true = t
+define variable false = nil
+
+
+;check if key is in table
+;if it is then add (key, value) to table and return true
+;otherwise return false
+define function table-add(key, value)
+ begin
+    loop 
+	  for i from 0 below length(**dict**)
+         if nth(0, nth(i, **dict**)) = key then return false
+	  end
+   set **dict** = cons(list(key, value), **dict**)
+    return true
+ end
+
+;return the value for key in table if the value is found
+;return "_--not found--_" otherwise
+define function table-get(key)
+  begin
+	loop 
+	  for i from 0 below length(**dict**)
+         if nth(0, nth(i, **dict**)) = key then return nth(1, nth(i, **dict**))
+	  end
+	return "_--not found--_"
+  end
+
+define function table-remove(key)
+  begin
+     with new-table = nil
+     loop 
+       for i from 0 below length(**dict**)
+        if nth(0, nth(i, **dict**)) != key then 
+		   set new-table = cons(nth(i, **dict**), new-table)
+	   end
+	set **dict** = new-table
+  end
+
+define function table-set(key, value)
+ begin
+    exec table-remove(key)
+    exec table-add(key, value)
+ end
+
+define function table-get-keys()
+ begin
+    with res = nil
+	loop 
+      for i from 0 below length(**dict**)
+         set res = cons(nth(0, nth(i, **dict**)), res)
+	  end
+	return res
+ end
