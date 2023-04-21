@@ -59,60 +59,47 @@ define function find-label(layer, name, expect-to-find: true)
 
 
 
-;add a label to your musical world
-;name is the name of the label, it must be distinct from other labels you've made so far
-;containment is a list of the labels making up your label
-;each label in the list can be a label you made already or the unit pulse
-;the duration argument can be left blank for the length of this label to be inferred based on the containment
-;otherwise the containment must be set to a list {n id} where n is the number of subpulses 
-;with label id and they fit equally within this label of duration duration-label
-define function add-label(layer-name, name, containment: 1, duration-label: "infer")
+;add a label that feels one swing with duration duration
+;note, the duration has to be another label, can use n-unit() to create
+;a 'ghost' label where n-unit(n) is a label durating n unit pulses
+define function add-simple-label(layer, name, duration)
  begin
-    if duration-label = "infer" then
-	  begin
-         set duration = 0
-		   loop 
+	exec insert-label(layer, make-label(name, nil, duration))
+ end
+
+;group together already existing labels 
+;name is the name of the new label you want to add
+;containment is the list of labels such that this label is felt by feeling that list in order
+define function add-grouping-label(layer, name, containment)
+ begin
+	set duration = 0
+		loop 
 		    for i from 0 below length(containment)
-			   set duration = duration + extract-duration(find-label(layer-name, nth(i, containment)))
+			   set duration = duration + extract-duration(find-label(layer, nth(i, containment)))
 			end
-		 exec insert-label(layer-name, make-containment-label(name, duration, containment))
-		 return
-  	  end
-  	set duration = extract-duration(find-label(layer-name, duration-label))
-	exec insert-label(layer-name, make-anonymous-subpulses-label(name, duration, containment))
+		 exec insert-label(layer, make-label(name, containment, duration))
  end
 
 
-
-
-
-;return the inter-onset intervals given by the flow of the label in a tree format
-define function label-to-iois(layer, label)
+;add a label built on sub-labels which don't exist yet
+;since the sub-labels don't yet exist, you have to specify the total duration by providing
+;another label. This label will have total duration equal to that other label
+;the duration of the sublabels is inferred by making them evenly spaced
+;important: requires ALL labels in containment to not exist yet
+;this function mainly to be used for creating tuplets
+;if you want to use labels you made already it's better to use a multi-call scheme to add-grouping-label
+define function add-multi-label(layer, name, containment, duration-label)
  begin
-    with label-object = find-label(layer, label),
-	     type = containment-type(label-object),
-		 duration = extract-duration(label-object),
-		 res = nil
-    if type = *unit-pulse-symbol* then return *unit-pulse-duration*
-    else if type = "anonymous-subpulses-label" then 
-      begin
-         with n = extract-anonymous-subpulses(label-object)
-	    loop
-          for i from 0 below n
-             set res = cons(duration / (n * 1.0), res)
-		  end
-		return res
-	 end
-	else 
- 	  begin
-        with containment = extract-containment(label-object)
-		loop
-          for i from 0 below length(containment)		
-             set res = cons(label-to-iois(layer, nth(i, containment)), res)
-		  end
-		return reverse(res)
+	;first make the containment labels
+	loop 
+	  with sub-duration = extract-duration(find-label(layer, duration-label)) / length(containment)
+	  for i from 0 below length(containment)
+	     exec add-simple-label(layer, nth(i, containment), sub-duration)
 	  end
+	;now that the sub-labels exist we can make the actual label
+	exec add-grouping-label(layer, name, containment)
  end
+
 
 ;make and return a label that has duration n unit pulses
 ;warning: this works in an unsafe way, the generated label is NOT A VALID LABEL

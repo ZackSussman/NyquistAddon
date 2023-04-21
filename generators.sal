@@ -1,0 +1,18 @@
+;envelopes
+;we define variables for the most common types of envelopes we want to use
+;-----------------------------
+define variable *e-pluck* = "pluck envelope"
+define variable *e-presence* = "presence envelope"
+define variable *e-short-presence* = "shorter presence envelope"
+define variable *e-mountain* = "mountain envelope"
+define variable *e-rise* = "rising enveelope"
+;---------------------------
+
+
+
+;pitch types
+;------------------------------------------
+define variable *pitch-melodic* = "melodic pitch type" ;a sound with a single pitch
+define variable *pitch-harmonic* = "harmonic pitch type" ;a sound with multiple pitches
+define variable *pitch-textural* = "textural pitch type" ;aperiodic sound (no pitch perceivable)
+;-------------------------------------------
