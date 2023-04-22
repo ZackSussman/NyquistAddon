@@ -1,54 +1,88 @@
 load "generators.sal"
 
 ;---------------- EVENTS ---------------------------------------------
-;defines basic functions for constructing sounds based on parameters
-;that can be varied in accordance with labels
+;defines basic functions for placing parameters via labels 
+;so that we can musically construct sound events with respect to those parameters
+;an event is a parameter of a sound object that affects how that sound object 
+;is constructed
+;to be musical, we can add events in accordance with labels
 
-;an event is a sound object that can be made using some parameters
-;we view a sound object as having a specific type of volume envelope
-;we place the sound object in a label and its motion takes up the entire label
 
-;layer: the layer that this event is a part of
-;presence: a list of labels for which the event is present (if an event is present in a label then it takes up the entire duration of the label as one motion)
-;if the presence is not supplied, then the name must be the name of a label 
-;then this event will take place everywhere that label is used
-;generator is the generator for the event
-;envelope specifies one of the envelopes at the top of this file to use
-;pitch-type specifies what the pitch content of this event is and is also chosen from the top of this file
-;indexed-label-restrictions: a list of pairs (label-name, ns) where ns is a list of indices
-;such that the labels in presence will only be applied if they are 
-;contained at the xth contained label index of the label label-name for some x
-;label restrictions: a list of labels such that any label in presence will only be applied
-;if that label is contained within some label in label-restrictions
-define function make-event(layer, name, presence: "use-name", 
-                           generator, envelope: *e-presence*, pitch-type: ,
-						   indexed-label-restrictions: nil, label-restrictions: nil)
+;store all the event objects in a list
+define variable *all-events* = nil
+
+
+;retreive an event object from its name
+define function search-event(event-name)
  begin
-    
+	loop
+	 for i from 0 below length(*all-events*)
+		if get-event-name(nth(i, *all-events*)) = event-name then return nth(i, *all-events*)
+	 end
+	return "not found"
  end
 
-
-
-
-;name is the name of a label 
-;context is a list of the form {CR {p1 i1} {p2 i2} ... {pn in}}
-;where CR is the current root and is just a label name
-;then each {px ix} indicates the parent of the label to its left and ix tells us that
-;the label to the left is the ixth child of the label to the right (within context)
-;this essentially tells us the root to label path for the current label of this event
-;return the sound event names that will be sounded during this context
-;the output is a list {{e1 c} {e2 c} {e3 c}}
-;where each event is ajoined to the context (this is done so that) when the events are 
-;processed later they can be processed with their context
-define function get-events-for-context(name, context)
+;parent is the grouping label that this melodic-event applies to
+;note all labels will be loooked for in layer layer
+;it will then apply the pitches from your pitch-sequence 
+;in order of appearance of the list of labels for-labels
+;throughout the ordered leaves of the label tree rooted at parent
+;if the list of for-labels is exhausted then it is repeated
+;if the pitch-sequence is exhausted then it is also repeated
+define function add-event-melody(layer, parent, for-labels, pitch-sequence)
  begin
 
  end
 
 
-;return the samples of the event with name event at the context 
-;reminder: context is a list {}
-define function get-event-audio(event, context)
+;check if this event has any context-decider that accepts this context
+define function does-event-matter-at-context(event-object, context)
  begin
+	return decide(context, accumulate-context-decider-or(get-all-context-deciders-for-event(event-object)))
+ end
 
+;return a list {{e1 context} {e2 context} ... {en context}}
+;where e1 through en are the names of the events 
+define function get-events-at-context(context)
+ begin
+	set accepting-events = nil
+	loop 
+	  for i from 0 below length(*all-events*)
+		if does-event-matter-at-context(nth(i, *all-events*), context) then 
+		 begin
+			set accepting-events = cons(list(get-event-name(nth(i, *all-events*)), context), accepting-events)
+		 end
+	  end
+	return accepting-events
+ end
+
+
+
+;return a list which maps the event parameters to their values at this context based on the event-info
+define function generate-event-attributes-at-context(event-info, context)
+ begin
+	set result = nil
+	loop 
+	  for i from 0 below length(event-info)
+		 set cur-parameter = nth(0, nth(i, event-info))
+		 set cur-parameter-values = nth(1, nth(i, event-info))
+		 loop
+		   for j from 0 below length(cur-parameter-values) 
+			  if decide(context, nth(1, nth(j, cur-parameter-values))) then 
+			    begin
+                   set result = cons(list(cur-parameter, nth(0, nth(j, cur-parameter-values))), result)
+				end
+		   end
+	  end
+ end
+
+;input is a list {event-name context} 
+;return the samples for playing the event event-name at context context
+define function get-audio-for-event-at-context(event-context-list)
+ begin
+	set event-name = nth(0, event-context-list)
+	set context = nth(1, event-context-list)
+	set event-object = search-event(event-name)
+	set event-info = get-event-info(event-object)
+	return generate-event-samples-at-context(event-object, generate-event-attributes-at-context(event-info, context), context)
  end

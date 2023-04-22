@@ -2,7 +2,7 @@
 load "dict.sal" ;basic dictionary used for the layer scheme
 load "label-object.sal" ;construct and get information from label objects
 load "label.sal" ;stores, modify, and get time information from label objects
-load "events.sal"
+load "events.sal" ;how we actually create sounds
 
 
 ;a helper for make-music to keep track of the context
@@ -11,23 +11,22 @@ load "events.sal"
 ;then each {px ix} indicates the parent of the label to its left and ix tells us that
 ;the label to the left is the ixth child of the label to the right (within context)
 ;this essentially tells us the root to label path for the current label of this event
-function make-music-with-context(layer, context)
+function make-music-with-context(context)
  begin
    ;collect the events that must happen for this label
    ;and find the label object
-   with  cur-label = nth(0, context) 
-         events = get-events-for-context(context), 
+   with  cur-label = nth(0, context),
+         cur-events = get-events-at-context(context),
          label-object = find-label(layer, cur-label),
          containment = extract-containment(label-object),
-		   duration = extract-duration(label-object),
          sub-events = nil
         loop
            for i from 0 below length(containment)
-               set new-context = cons(nth(i, containment), cons(list(nth(0, context), i), rest(context)))
+               set new-context = advance-context-to-ith-child(i, context)
                set sub-events = cons(make-music-with-context(layer, new-context), sub-events)
            end
 
-      return sim(sim(mapcar(events, quote(get-event-audio))), seq(sub-events)) 
+      return sim(sim(mapcar(cur-events, quote(get-audio-for-event-at-context))), seq(reverse(sub-events))) 
  end
 
 ;roots is a list {r1 r2 r3 ... rn}
@@ -41,7 +40,7 @@ function make-music(roots)
         for i from 0 below length(roots)
            set layer = nth(0, nth(i, roots))
            set label = nth(1, nth(i, roots))
-           set pieces = cons(make-music-with-context(layer, list(label)), pieces)
+           set pieces = cons(make-music-with-context(layer, make-context-from(layer, label)), pieces)
         end
       return sim(pieces)
    end

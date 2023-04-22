@@ -1,18 +1,13 @@
-;envelopes
-;we define variables for the most common types of envelopes we want to use
-;-----------------------------
-define variable *e-pluck* = "pluck envelope"
-define variable *e-presence* = "presence envelope"
-define variable *e-short-presence* = "shorter presence envelope"
-define variable *e-mountain* = "mountain envelope"
-define variable *e-rise* = "rising enveelope"
-;---------------------------
 
 
 
-;pitch types
-;------------------------------------------
-define variable *pitch-melodic* = "melodic pitch type" ;a sound with a single pitch
-define variable *pitch-harmonic* = "harmonic pitch type" ;a sound with multiple pitches
-define variable *pitch-textural* = "textural pitch type" ;aperiodic sound (no pitch perceivable)
-;-------------------------------------------
+;compute the samples for the event-object at the context!
+;attributes is a list such that for each parameter-name n in event-object, if that parameter
+;has a value associated with it v at this context, then the list {n v} is in attributes
+;this function must be modified to account for new parameters that are added to
+;parameters.sal
+;for now, for the simple project7 implementation, I only care about pitch and envelope
+define function generate-event-samples-at-context(event-object, attributes, context)
+ begin
+	
+ end

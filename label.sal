@@ -62,9 +62,9 @@ define function find-label(layer, name, expect-to-find: true)
 ;add a label that feels one swing with duration duration
 ;note, the duration has to be another label, can use n-unit() to create
 ;a 'ghost' label where n-unit(n) is a label durating n unit pulses
-define function add-simple-label(layer, name, duration)
+define function add-simple-label(layer, name, duration-label)
  begin
-	exec insert-label(layer, make-label(name, nil, duration))
+	exec insert-label(layer, make-label(name, nil, duration-label))
  end
 
 ;group together already existing labels 
