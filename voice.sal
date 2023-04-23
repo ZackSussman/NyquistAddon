@@ -1,0 +1,44 @@
+;a voice is a specific type of sound object which exhibits a pitch and 
+;amplitude envelope
+;we provide a basic sinusoidal implementation at first
+
+define variable *voices* = nil
+
+
+
+define function add-voice(name, layer)
+ begin
+	set *voices* = cons(list(name, layer, nil), *voices*)
+ end
+
+;this is my favorite musical way to specify the melody
+;name specifies the name of the melody that we are adding these notes to
+;through-labels is a list of labels {l1 l2 ... ln}
+;after calling this function, the melody name will satisfy the following property:
+;if you create-music from some label L, then the through-labels are checked 
+;from left to right. Every time one is found in the label tree from L, then
+;every leaf within the label is assigned the next pitch from pitch-sequence. 
+;if you exhaust the pitch-sequence, it is looped. 
+;if you exhaust the through-labels, it is also looped. 
+;note this function requires the voice to already exist and all the through-labels
+;must belong to the same layer that this voice was added to
+define function voice-add-melody(name, through-labels, pitch-sequence)
+ begin
+	set new-voices = nil
+	loop
+	 for i from 0 below length(*voices*)
+		if nth(0, nth(i, *voices*)) != name then 
+		 begin
+			set new-voices = cons(nth(i, *voices*), new-voices)
+		 end
+		else 
+		 begin
+			set this-voice = nth(i, *voices*)
+			set existing-melody = nth(2, this-voice)
+			set new-melody = cons(list(through-labels, pitch-sequence), existing-melody)
+			set new-voice = list(nth(0, this-voice), nth(1, this-voice), new-melody)
+			set new-voices = cons(new-voice, new-voices)
+		 end
+	 end
+	set *voices* = reverse(new-voices)
+ end

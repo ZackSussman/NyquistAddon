@@ -1,0 +1,21 @@
+load "music.sal"
+
+
+exec add-layer("meter")
+exec add-label("meter", "doo", duration-label: n-unit(4))
+exec add-label("meter", "duh", duration-label: "doo")
+exec add-label("meter", "base", containment: list("doo", "duh"))
+
+
+exec add-layer("rhythm")
+exec add-label("rhythm", "bum", duration-label: n-unit(3))
+exec add-label("rhythm", "ga", duration-label: n-unit(1))
+exec add-label("rhythm", "cha", duration-label: n-unit(2))
+exec add-label("rhythm", "gu", duration-label: "cha")
+exec add-label("rhythm", "cha gu", containment: list("cha", "gu"))
+exec add-label("rhythm", "ga cha gu", containment: list("ga", "cha gu"))
+exec add-label("rhythm", "rhythm", containment: list("bum", "ga cha gu"))
+
+print(label-to-iois("meter", "base"))
+print(label-to-iois("rhythm", "rhythm"))
+

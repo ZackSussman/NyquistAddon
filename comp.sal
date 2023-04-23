@@ -6,7 +6,7 @@ exec add-simple-label("melody", "dum", n-unit(2))
 exec add-simple-label("melody", "dom", n-unit(3))
 exec add-simple-label("melody", "ge", n-unit(1))
 exec add-grouping-label("melody", "dum dom ge", list("dum", "dom", "ge"))
-exec add-grouping-label("melody", "da", n-unit(4))
+exec add-simple-label("melody", "da", n-unit(4))
 exec add-grouping-label("melody", "dum dom ge da", list("dum dom ge", "da"))
 
 exec add-multi-label("melody", "dibe", list("di", "be"), n-unit(2))
@@ -18,9 +18,7 @@ exec add-grouping-label("melody", "dum dom ge dibe bom bom b", list("dum dom ge"
 exec add-grouping-label("melody", "X", list("dum dom ge da", "dum dom ge dibe bom bom b"))
 exec add-grouping-label("melody", "main melody rhythm", list("X", "X", "X", "X"))
 
-
-exec add-melody("highs", "melody", "main melody rhythm", list("da"), list(G4, A4, B4, D4))
-exec add-melody("fillers2", "melody", "main melody rhythm", list("bide bom bom b"), list(E4, C4, G4, C4))
-exec add-melody("fillers1", "melody", "main melody rhythm", list("dum dom ge"), list(A3, B3, C4))
-
-
+exec add-voice("main", "melody")
+exec voice-add-melody("main", list("dum", "dom", "ge"), list(A3, B3, C4))
+exec voice-add-melody("main", list("da"), list(G4, A4, B4, D4))
+exec voice-add-melody("main", list("bide bom bom b"), list(E4, C4, G4, C4))

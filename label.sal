@@ -64,7 +64,15 @@ define function find-label(layer, name, expect-to-find: true)
 ;a 'ghost' label where n-unit(n) is a label durating n unit pulses
 define function add-simple-label(layer, name, duration-label)
  begin
-	exec insert-label(layer, make-label(name, nil, duration-label))
+	exec insert-label(layer, make-label(name, nil, extract-duration(find-label(layer, duration-label))))
+ end
+
+;only we should use this (not user)
+;it allows us to add a label with an arbitrary duration by
+;allowing the duration argument to be a time rather than a label
+define function add-simple-label-hidden(layer, name, duration)
+ begin
+   exec insert-label(layer, make-label(name, nil, duration))
  end
 
 ;group together already existing labels 
@@ -75,7 +83,8 @@ define function add-grouping-label(layer, name, containment)
 	set duration = 0
 		loop 
 		    for i from 0 below length(containment)
-			   set duration = duration + extract-duration(find-label(layer, nth(i, containment)))
+            set ith-label-object = find-label(layer, nth(i, containment))
+			   set duration = duration + extract-duration(ith-label-object)
 			end
 		 exec insert-label(layer, make-label(name, containment, duration))
  end
@@ -94,7 +103,7 @@ define function add-multi-label(layer, name, containment, duration-label)
 	loop 
 	  with sub-duration = extract-duration(find-label(layer, duration-label)) / length(containment)
 	  for i from 0 below length(containment)
-	     exec add-simple-label(layer, nth(i, containment), sub-duration)
+	     exec add-simple-label-hidden(layer, nth(i, containment), sub-duration)
 	  end
 	;now that the sub-labels exist we can make the actual label
 	exec add-grouping-label(layer, name, containment)
