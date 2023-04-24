@@ -1,5 +1,6 @@
 load "label-object.sal"
 load "label.sal"
+load "mixing.sal"
 load "voice.sal"
 load "structure.sal"
 

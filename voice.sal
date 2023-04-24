@@ -178,7 +178,7 @@ define function get-voice-audio-at(voice-name, label-name)
 		set pitch = deduce-pitch(i, leaf-pitch-indices)
 		if pitch != "not part of the melody" then 
 			begin
-			   set reses = cons((pwl(.1, 1, .8, 0, 1) * osc(pitch)) ~ dur , reses)
+			   set reses = cons(freq-to-amplitude-adjustment(step-to-hz(pitch)) * (pwl(.1, 1, .8, 0, 1) * osc(pitch)) ~ dur , reses)
 			end 
 		else 
 		   begin
@@ -186,5 +186,5 @@ define function get-voice-audio-at(voice-name, label-name)
 		   end
 	 end
 
-	return 0.1 * list-seq(reverse(reses))
+	return list-seq(reverse(reses))
   end
