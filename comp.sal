@@ -1,5 +1,8 @@
 load "music.sal"
 
+exec init() ;I require all programs must call this
+exec set-unit-pulse(.15)  
+
 exec add-layer("melody")
 
 exec add-simple-label("melody", "dum", n-unit(2))
@@ -21,4 +24,19 @@ exec add-grouping-label("melody", "main melody rhythm", list("X", "X", "X", "X")
 exec add-voice("main", "melody")
 exec voice-add-melody("main", list("dum", "dom", "ge"), list(A3, B3, C4))
 exec voice-add-melody("main", list("da"), list(G4, A4, B4, D4))
-exec voice-add-melody("main", list("bide bom bom b"), list(E4, C4, G4, C4))
+exec voice-add-melody("main", list("dibe bom bom b"), list(E4, C4, G4, C4))
+
+exec add-simple-label("melody", "long note", "X")
+exec add-simple-multi-label("melody", "shorter note", list("dum dom ge da", "dum"))
+exec add-simple-multi-label("melody", "shortest note", list("dom", "ge", "dibe bom bom b"))
+exec add-grouping-label("melody", "last two", list("shorter note", "shortest note"))
+exec add-grouping-label("melody", "bass rhythm", list("long note", "long note", "long note", "last two"))
+
+exec add-voice("bass", "melody")
+exec voice-add-melody("bass", list("long note"), list(C2, A1, F1))
+exec voice-add-melody("bass", list("shorter note", "shortest note"), list(D1, G1))
+
+play sim(get-voice-audio-at("main", "main melody rhythm"),
+         get-voice-audio-at("bass", "bass rhythm"))
+
+

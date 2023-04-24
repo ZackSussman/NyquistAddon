@@ -2,3 +2,10 @@ load "label-object.sal"
 load "label.sal"
 load "dict.sal"
 load "voice.sal"
+
+;initialize global data
+define function init()
+ begin
+	set *voices* = nil
+	set **dict** = nil
+ end
