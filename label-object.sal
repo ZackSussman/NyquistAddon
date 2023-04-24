@@ -27,7 +27,8 @@ define function extract-name(label-object)
 
 define function extract-duration(label-object)
  begin
-   return nth(2, label-object)
+   if extract-name(label-object) = *unit-pulse-symbol* then return *unit-pulse-duration*
+   else return nth(2, label-object)
  end
 
 

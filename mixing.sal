@@ -1,0 +1,11 @@
+;defines basic functions for mixing purposes
+;note: the user shouldn't have to deal with mixing
+
+
+;we could use the actual curves but we will do a simple adjustment to 
+;have a more balanced mixed
+define function freq-to-amplitude-adjustment(freq)
+ begin
+	with max-amplitude = .1 ;to avoid clipping
+	return max-amplitude * (1 - ((freq - 20.0) / (20000.0 - 20.0)))
+ end

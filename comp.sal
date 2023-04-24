@@ -73,5 +73,62 @@ exec voice-add-melody("on top weighter", list("weight 1", "weight 2", "weight 3"
 set on-top-weight = list("on top weighter", "on top rhythm")
 exec add-voice-to-section("on top comes in", "harmony comes in", on-top-weight)
 
-play get-music(list("intro", "intro with bass", "harmony comes in", "on top comes in"))
+exec add-voice("intro weighter")
+exec add-grouping-label("intro weighter rhythm", list("on top main pat", "on top main pat"))
+exec voice-add-melody("intro weighter", list("on top main pat"), list(A2))
+set pre-weighter = list("intro weighter", "intro weighter rhythm")
+exec add-section("pre-intro", list(pre-weighter))
+
+
+exec add-voice("final voice")
+exec add-simple-label("ta", n-unit(2))
+exec add-multi-label("tikitiki", list("ti", "ki", "ti", "ki"), n-unit(4))
+exec add-grouping-label("ta tikitiki", list("ta", "tikitiki"))
+
+exec add-simple-label("tai", "ta")
+exec add-simple-label("tow", "ta")
+exec add-grouping-label("tai tow", list("tai", "tow"))
+
+exec add-simple-label("t", *unit-pulse-symbol*)
+exec add-simple-label("tooo", n-unit(2))
+exec add-grouping-label("t too t too t", list("t", "tooo", "t", "tooo", "t"))
+
+exec add-grouping-label("Y", list("ta tikitiki", "tai tow", "dum dom ge", "t too t too t"))
+exec add-grouping-label("final voice rhythm", list("Y", "Y", "Y", "Y"))
+
+exec voice-add-melody("final voice", list("ta", "ti", "ki", "ti", "ki"), list(C5, C5, D5, E5, F5,
+																			  A4, A4, B4, C5, D5,
+																			  C6, C6, B5, G5, E5, 
+																			  D5, D5, C5, D5, E5))
+exec voice-add-melody("final voice", list("tai", "tow"), list(G5, C5,
+														      E5, A4,
+															  D5, C5,
+															  G5, E5))
+
+exec voice-add-melody("final voice", list("dum", "dom", "ge"), list(A5, G5, E5,
+         															B4, C5, G5,
+																	D5, E5, A5,
+																	C5, B4, A4))
+
+exec voice-add-melody("final voice", list("t too t too t"), list(C5, E5, G5, A4))
+
+set final-voice = list("final voice", "final voice rhythm")
+exec add-voice-to-section("final section", "on top comes in", final-voice)
+
+
+exec add-simple-label("final chord", n-unit(10))
+exec voice-add-melody("bass", list("final chord"), list(A2))
+exec voice-add-melody("main", list("final chord"), list(G5))
+exec voice-add-melody("intro weighter", list("final chord"), list(D5))
+exec voice-add-melody("final voice", list("final chord"), list(E5))
+exec add-section("final chord", list(list("bass", "final chord"), list("main", "final chord"), list("intro weighter", "final chord"), list("final voice", "final chord")))
+
+
+play get-music(list("pre-intro", 
+					"intro", 
+					"intro with bass", 
+					"harmony comes in", 
+					"on top comes in", 
+					"final section",
+					"final chord"))
 

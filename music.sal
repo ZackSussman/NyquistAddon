@@ -12,4 +12,6 @@ define function init()
 	set *labels* = list(make-unit-pulse-label())
 	set *voices* = nil
 	set *sections* = nil
+	set false = nil
+	set true = #t
  end
