@@ -4,9 +4,9 @@
 
 define variable *voices* = nil
 
-define function add-voice(name, layer)
+define function add-voice(name)
  begin
-	set *voices* = cons(list(name, layer, nil), *voices*)
+	set *voices* = cons(list(name, nil), *voices*)
  end
 
 define function find-voice(voice-name)
@@ -41,9 +41,9 @@ define function voice-add-melody(name, through-labels, pitch-sequence)
 		else 
 		 begin
 			set this-voice = nth(i, *voices*)
-			set existing-melody = nth(2, this-voice)
+			set existing-melody = nth(1, this-voice)
 			set new-melody = cons(list(through-labels, pitch-sequence), existing-melody)
-			set new-voice = list(nth(0, this-voice), nth(1, this-voice), new-melody)
+			set new-voice = list(nth(0, this-voice), new-melody)
 			set new-voices = cons(new-voice, new-voices)
 		 end
 	 end
@@ -57,9 +57,9 @@ define function voice-add-melody(name, through-labels, pitch-sequence)
 ;Ts-index tells us the index of the first leaf in T with respect to the 
 ;original T that was passed into this function (this lets us keep track)
 ;of where we are as we recurse
-define function find-pattern-after(at-least, layer, Ts-index, T, subtree)
+define function find-pattern-after(at-least, Ts-index, T, subtree)
  begin
-	with label-root = find-label(layer, T),
+	with label-root = find-label(T),
 		 containment = extract-containment(label-root)
 	if length(containment) = 0 & T != subtree then return "not found"
 	else if T = subtree then 
@@ -76,7 +76,7 @@ define function find-pattern-after(at-least, layer, Ts-index, T, subtree)
 	loop 
 	  for i from 0 below length(containment)
 		 set new-pattern-to-search-within = nth(i, containment)
-		 set recursive-res = find-pattern-after(at-least, layer, Ts-index + get-starting-index-of-sublabel(layer, T, i), new-pattern-to-search-within, subtree)
+		 set recursive-res = find-pattern-after(at-least, Ts-index + get-starting-index-of-sublabel(T, i), new-pattern-to-search-within, subtree)
 		 if recursive-res != "not found" then return recursive-res
 	  end
 	return "not found"
@@ -86,21 +86,21 @@ define function find-pattern-after(at-least, layer, Ts-index, T, subtree)
 ;put a -1 if no pitch corresponding to the leaf is not played, otherwise put the index into the
 ;pitch list based on the pattern matching given by the melody form indicated by subtrees
 ;we essentially match subtrees against T
-define function pattern-match-subtrees-to-indices(layer, T, subtrees)
+define function pattern-match-subtrees-to-indices(T, subtrees)
  begin
 	set result = nil
 	set first-leaf-index-to-not-be-labelled = 0 ;unfortunately this variable name is still an abbreviation. Technically it should be "first-leaf-index-to-not-be-labelled-such-that-no-leaf-after-it-is-labelled"
 	;we will format our output as according to this leaves list
-	loop until first-leaf-index-to-not-be-labelled = length(make-leaves-list(layer, T))
+	loop until first-leaf-index-to-not-be-labelled = length(make-leaves-list(T))
 	    loop
 		  for i from 0 below length(subtrees)
 			set subtree-to-match = nth(i, subtrees)
-			set index-found-at = find-pattern-after(first-leaf-index-to-not-be-labelled, layer, 0, T, subtree-to-match)
+			set index-found-at = find-pattern-after(first-leaf-index-to-not-be-labelled, 0, T, subtree-to-match)
 			if index-found-at = "not found" then 
 			 begin
 				return reverse(result)
 			 end
-			set exclusive-endpoint = index-found-at + length(make-leaves-list(layer, subtree-to-match))
+			set exclusive-endpoint = index-found-at + length(make-leaves-list(subtree-to-match))
 			set result = cons(list(index-found-at, exclusive-endpoint), result)
 			set first-leaf-index-to-not-be-labelled = exclusive-endpoint
 	      end
@@ -137,7 +137,13 @@ define function list-seq(L)
 	return seq(nth(0, L), list-seq(rest(L)))
  end
 
-;label-name must name a label within the layer that voice-name is in 
+define function list-sim(L)
+ begin
+	if length(L) = 1 then return nth(0, L)
+	return sim(nth(0, L), list-sim(rest(L)))
+ end
+
+
 ;the function goes through the label tree rooted at label named by label-name
 ;and for each leaf, figures out what pitch it should be
 ;it then plays the correct note at that pitch 
@@ -145,21 +151,20 @@ define function get-voice-audio-at(voice-name, label-name)
   begin
 	 ;this is essentially going to be a pattern matching game
 	 ;we first retrieve the layer and melody info from the voice
-	 set voice = find-voice(voice-name)
-	 set layer = nth(1, voice)
-	 set melodic-info = nth(2, voice)
-	 set leaves-to-evaluate = make-leaves-list(layer, label-name)
+	 with voice = find-voice(voice-name),
+	      melodic-info = nth(1, voice),
+	      leaves-to-evaluate = make-leaves-list(label-name)
 
 	 ;the melodic info has the following form 
 	 ;{{{label1 label2 ... labeln} {pitch1 pitch2 ... pitch m}} ... }
 	 ;what this means is that each list in melodic-info will give us some split 
 	 ;of the leaves into some notes, we first match the leaves against each one
 	 set leaf-pitch-indices = nil
-	 loop 
+	 loop
 	   for i from 0 below length(melodic-info)
 		  set label-sequence = nth(0, nth(i, melodic-info))
 		  set pitch-sequence = nth(1, nth(i, melodic-info))
-		  set leaf-groupings = pattern-match-subtrees-to-indices(layer, label-name, label-sequence)	
+		  set leaf-groupings = pattern-match-subtrees-to-indices(label-name, label-sequence)	
 		  set leaf-pitch-indices = cons(list(leaf-groupings, pitch-sequence), leaf-pitch-indices)
 	   end
 	
@@ -169,11 +174,11 @@ define function get-voice-audio-at(voice-name, label-name)
 	set reses = nil
 	loop
 	 for i from 0 below length(leaves-to-evaluate)
-	 	set dur = extract-duration(find-label(layer, nth(i, leaves-to-evaluate)))
+	 	set dur = extract-duration(find-label(nth(i, leaves-to-evaluate)))
 		set pitch = deduce-pitch(i, leaf-pitch-indices)
 		if pitch != "not part of the melody" then 
 			begin
-			   set reses = cons(pluck(pitch) ~ dur , reses)
+			   set reses = cons((pwl(.1, 1, .8, 0, 1) * osc(pitch)) ~ dur , reses)
 			end 
 		else 
 		   begin

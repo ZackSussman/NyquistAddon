@@ -1,6 +1,7 @@
 
 define variable *unit-pulse-duration* = 0.25 ;seconds 
 define variable *unit-pulse-symbol* = "†"
+define variable *labels* = nil
 
 define function set-unit-pulse(t)
  begin
@@ -8,50 +9,26 @@ define function set-unit-pulse(t)
  end
 
 
-
-define function init-labels-for-layer(name)
- begin
-    ;store the labels: the format is {label1 label2 label3 ... labeln}, where
-    ; labeli = {name duration(in seconds) containment } (unless labeli = *unit-pulse-symbol* in which case there is no containment or duration (since we just read from *unit-pulse-duration*))
-    ;where containment is a list containing the labels that this label contains, or a number if instead this label is broken down into that number of pulses.
-    ;In this case, the duration refers to the total time taken up by the sub-pulses and not each individual sub-pulse
-    exec table-add(name, list(make-unit-pulse-label()))
- end
-
-
-
 ;label collection interface
 ;-----------------------------------------------------------------------
 ;return a label-object
 ;if expect-to-find is true and it is not found an error will be printed
 ;otherwise if it is not found you will receive false instead of the label object
-define function find-label(layer, name, expect-to-find: true)
+define function find-label(name, expect-to-find: true)
  begin
-    with labels = table-get(layer)
-    if labels = "_--not found--_" then 
-     begin
-       print(strcat("error: invalid layer name in find-label: ", layer))
-       return false
-     end
     loop 
-        for i from 0 below length(labels)
-		   set label-object = nth(i, labels)
+        for i from 0 below length(*labels*)
+		   set label-object = nth(i, *labels*)
 		   if extract-name(label-object) = name then return label-object
 	    end
     if expect-to-find then print(strcat("error: invalid label name in find-label: ", name)) 
     else return false
  end
 
-;requires label is not already in *labels* for this layer
- define function insert-label(layer, label-object)
+;requires label is not already existing
+ define function insert-label(label-object)
   begin
-     with labels = table-get(layer)
-     if labels = "_--not found--_" then 
-       begin
-          exec init-labels-for-layer(layer)
-       end
-     set labels = cons(label-object, labels)
-     exec table-set(layer, labels)
+     set *labels* = cons(label-object, *labels*)
   end
 ;-----------------------------------------------------------------------
 
@@ -61,31 +38,31 @@ define function find-label(layer, name, expect-to-find: true)
 ;add a label that feels one swing with duration duration
 ;note, the duration has to be another label, can use n-unit() to create
 ;a 'ghost' label where n-unit(n) is a label durating n unit pulses
-define function add-simple-label(layer, name, duration-label)
+define function add-simple-label(name, duration-label)
  begin
-	exec insert-label(layer, make-label(name, nil, extract-duration(find-label(layer, duration-label))))
+	exec insert-label(make-label(name, nil, extract-duration(find-label(duration-label))))
  end
 
 ;only we should use this (not user)
 ;it allows us to add a label with an arbitrary duration by
 ;allowing the duration argument to be a time rather than a label
-define function add-simple-label-hidden(layer, name, duration)
+define function add-simple-label-hidden(name, duration)
  begin
-   exec insert-label(layer, make-label(name, nil, duration))
+   exec insert-label(make-label(name, nil, duration))
  end
 
 ;group together already existing labels 
 ;name is the name of the new label you want to add
 ;containment is the list of labels such that this label is felt by feeling that list in order
-define function add-grouping-label(layer, name, containment)
+define function add-grouping-label(name, containment)
  begin
 	set duration = 0
 		loop 
 		    for i from 0 below length(containment)
-            set ith-label-object = find-label(layer, nth(i, containment))
+            set ith-label-object = find-label(nth(i, containment))
 			   set duration = duration + extract-duration(ith-label-object)
 			end
-		 exec insert-label(layer, make-label(name, containment, duration))
+		 exec insert-label(make-label(name, containment, duration))
  end
 
 
@@ -96,28 +73,28 @@ define function add-grouping-label(layer, name, containment)
 ;important: requires ALL labels in containment to not exist yet
 ;this function mainly to be used for creating tuplets
 ;if you want to use labels you made already it's better to use a multi-call scheme to add-grouping-label
-define function add-multi-label(layer, name, containment, duration-label)
+define function add-multi-label(name, containment, duration-label)
  begin
 	;first make the containment labels
 	loop 
-	  with sub-duration = extract-duration(find-label(layer, duration-label)) / length(containment)
+	  with sub-duration = extract-duration(find-label(duration-label)) / length(containment)
 	  for i from 0 below length(containment)
-	     exec add-simple-label-hidden(layer, nth(i, containment), sub-duration)
+	     exec add-simple-label-hidden(nth(i, containment), sub-duration)
 	  end
 	;now that the sub-labels exist we can make the actual label
-	exec add-grouping-label(layer, name, containment)
+	exec add-grouping-label(name, containment)
  end
 
 ;while the multi label lets you specify a containment but stretches it to a different duration,
 ;the simple multi label lets you specify a containment as a duration but keep it to a single pulse
-define function add-simple-multi-label(layer, name, duration-containment)
+define function add-simple-multi-label(name, duration-containment)
  begin
     with duration = 0
     loop 
       for i from 0 below length(duration-containment)
-        set duration = duration + extract-duration(find-label(layer, nth(i, duration-containment)))
+        set duration = duration + extract-duration(find-label(nth(i, duration-containment)))
       end
-    exec insert-label(layer, make-label(name, nil, duration))
+    exec insert-label(make-label(name, nil, duration))
  end
 
 
@@ -126,25 +103,13 @@ define function add-simple-multi-label(layer, name, duration-containment)
 ;the only way it is valid is that if you can get-duration on it you get the correct duration
 define function n-unit(n)
  begin
-    with label-name = strcat("_____", format(nil, "~A", n), "_____"),
-         layer-names = table-get-keys()
- 
-    loop 
-      for i from 0 below length(layer-names)
-         if find-label(nth(i, layer-names), label-name, expect-to-find: false) = false then 
-         exec insert-label(nth(i, layer-names), make-unsafe-duration-label(label-name, n * *unit-pulse-duration*))
-      end
+    with label-name = strcat("_____", format(nil, "~A", n), "_____")
+
+    if find-label(label-name, expect-to-find: false) = false then 
+      exec insert-label(make-unsafe-duration-label(label-name, n * *unit-pulse-duration*))
     
     return label-name
  end
-
-
-;so technicallyyy you only need to call this if you are going to use n-unit()
-;but it's good style to use it anyway
-define function add-layer(name)
-  begin
-    exec init-labels-for-layer(name)
-  end
 
 
 ;flatten a list (only a single level)
@@ -156,9 +121,9 @@ define function flatten(L)
 
 ;given a label label-name, output a list with just the leaves corresponding
 ;to the musical tree of that label. 
-define function make-leaves-list(layer, label-name)
+define function make-leaves-list(label-name)
  begin
-   with label-object = find-label(layer, label-name),
+   with label-object = find-label(label-name),
         containment = extract-containment(label-object),
         res = nil
    if containment = nil then
@@ -167,7 +132,7 @@ define function make-leaves-list(layer, label-name)
     end
     loop 
      for i from 0 below length(containment)
-       set res = cons(make-leaves-list(layer, nth(i, containment)), res)
+       set res = cons(make-leaves-list(nth(i, containment)), res)
      end
    return flatten(reverse(res))
  end
@@ -175,13 +140,13 @@ define function make-leaves-list(layer, label-name)
 
 ;for a label which is the ith contained label within label label-name, get the index of the first node
 ;of that label with respect to the entire label label-name
-define function get-starting-index-of-sublabel(layer, label-name, i)
+define function get-starting-index-of-sublabel(label-name, i)
  begin
     with result = 0,
-         containment = extract-containment(find-label(layer, label-name))
+         containment = extract-containment(find-label(label-name))
     loop 
       for j from 0 below i
-        set result = result + length(make-leaves-list(layer, nth(j, containment)))
+        set result = result + length(make-leaves-list(nth(j, containment)))
       end
     
     return result

@@ -1,11 +1,12 @@
 load "label-object.sal"
 load "label.sal"
-load "dict.sal"
 load "voice.sal"
+load "structure.sal"
 
 ;initialize global data
 define function init()
  begin
+	set *labels* = list(make-unit-pulse-label())
 	set *voices* = nil
-	set **dict** = nil
+	set *sections* = nil
  end

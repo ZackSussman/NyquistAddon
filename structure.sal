@@ -1,0 +1,44 @@
+;defines the musical constructs for the overall structure of a piece
+
+define variable *sections* = nil
+
+define function find-section(name)
+ begin
+	loop
+	 for i from 0 below length(*sections*)
+		if nth(0, nth(i, *sections*)) = name then return nth(i, *sections*)
+	 end
+	return "not found"
+ end
+
+;add a section to your piece by name
+;voice-and-patterns is a list {{v1 l1} {v2 l2} ... {vn ln}}
+;where each vi is a voice name that will be play within context of  label li
+define function add-section(name, voice-and-labels)
+ begin
+	set *sections* = cons(list(name, voice-and-labels), *sections*)
+ end
+
+;for internal use only
+define function section-to-audio(section-object)
+ begin
+	with voices-and-labels = nth(1, section-object)
+
+	set voice-audios = nil
+	loop 
+	  for i from 0 below length(voices-and-labels)
+	    set this-voice = nth(0, nth(i, voices-and-labels))
+		set this-label = nth(1, nth(i, voices-and-labels))
+		set voice-audios = cons(get-voice-audio-at(this-voice, this-label), voice-audios)
+	  end
+
+	return list-sim(voice-audios)
+ end
+
+
+;return the audio for playing the sections in order!
+;sections is a list of the section names that define your piece
+define function get-music(sections)
+ begin
+	return seq(list-seq(mapcar(quote(section-to-audio), reverse(*sections*))), s-rest(.5))
+ end
