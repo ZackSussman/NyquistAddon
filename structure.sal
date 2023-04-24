@@ -20,9 +20,10 @@ define function add-section(name, voice-and-labels)
  end
 
 ;for internal use only
-define function section-to-audio(section-object)
+define function section-to-audio(section-name)
  begin
-	with voices-and-labels = nth(1, section-object)
+	with section-object = find-section(section-name),
+		voices-and-labels = nth(1, section-object)
 
 	set voice-audios = nil
 	loop 
@@ -35,10 +36,17 @@ define function section-to-audio(section-object)
 	return list-sim(voice-audios)
  end
 
+;create a new section by adding a voice to an already existing section
+define function add-voice-to-section(new-section-name, old-section-name, new-voice-rhythm)
+ begin
+	set old-section = find-section(old-section-name)
+	set old-voices = nth(1, old-section)
+	exec add-section(new-section-name, cons(new-voice-rhythm, old-voices))
+ end
 
 ;return the audio for playing the sections in order!
 ;sections is a list of the section names that define your piece
 define function get-music(sections)
  begin
-	return seq(list-seq(mapcar(quote(section-to-audio), reverse(*sections*))), s-rest(.5))
+	return seq(list-seq(mapcar(quote(section-to-audio), sections)), s-rest(.5))
  end

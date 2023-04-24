@@ -3,6 +3,8 @@ load "label.sal"
 load "voice.sal"
 load "structure.sal"
 
+exec autonorm-off()
+
 ;initialize global data
 define function init()
  begin

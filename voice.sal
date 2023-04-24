@@ -186,5 +186,5 @@ define function get-voice-audio-at(voice-name, label-name)
 		   end
 	 end
 
-	return list-seq(reverse(reses))
+	return 0.1 * list-seq(reverse(reses))
   end

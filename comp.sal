@@ -16,7 +16,8 @@ exec add-grouping-label("dum dom ge da", list("dum dom ge", "da"))
 exec add-multi-label("dibe", list("di", "be"), n-unit(2))
 exec add-simple-label("bom", n-unit(2))
 exec add-simple-label("b", n-unit(1))
-exec add-grouping-label("dibe bom bom b", list("dibe", "bom", "bom", "b"))
+exec add-grouping-label("bom bom b", list("bom", "bom", "b"))
+exec add-grouping-label("dibe bom bom b", list("dibe", "bom bom b"))
 exec add-grouping-label("dum dom ge dibe bom bom b", list("dum dom ge", "dibe bom bom b"))
 
 exec add-grouping-label("X", list("dum dom ge da", "dum dom ge dibe bom bom b"))
@@ -43,8 +44,34 @@ exec voice-add-melody("bass", list("shorter note", "shortest note"), list(D2, G2
 
 set main-bassline = list("bass", "bass rhythm")
 
-exec add-section("intro with bass", list(main-voice-melody, main-bassline))
+exec add-voice-to-section("intro with bass", "intro", main-bassline)
 
-play get-music(list("intro", "intro with bass"))
+exec add-voice("harmony")
+exec voice-add-melody("harmony", list("dum", "dom", "ge"), list(C5, B4, G4))
+exec voice-add-melody("harmony", list("da"), list(E4, D4, C4, A4))
+exec voice-add-melody("harmony", list("di", "be"), list(D5, E5, 
+														C5, B4, 
+														D5, G5,
+														A3, A3))
+exec voice-add-melody("harmony", list("bom bom b"), list(G4, C4, A5, F3))
 
+set main-harmony-line = list("harmony", "main melody rhythm")
+exec add-voice-to-section("harmony comes in", "intro with bass", main-harmony-line)
+
+exec add-voice("on top weighter")
+exec add-simple-label("weight 1", "dum dom ge")
+exec add-simple-label("weight 2", "da")
+exec add-simple-label("weight 3", "dum dom ge")
+exec add-simple-label("weight 4", "dibe bom bom b")
+exec add-grouping-label("on top main pat", list("weight 1", "weight 2", "weight 3", "weight 4"))
+exec add-grouping-label("on top rhythm", list("on top main pat", "on top main pat", "on top main pat", 
+                                               "weight 1", "weight 2", "weight 3", "weight 4"))
+
+exec voice-add-melody("on top weighter", list("on top main pat"), list(E6, C6, A6))
+exec voice-add-melody("on top weighter", list("weight 1", "weight 2", "weight 3", "weight 4"), list(G6, G6, C6, C6))
+
+set on-top-weight = list("on top weighter", "on top rhythm")
+exec add-voice-to-section("on top comes in", "harmony comes in", on-top-weight)
+
+play get-music(list("intro", "intro with bass", "harmony comes in", "on top comes in"))
 
